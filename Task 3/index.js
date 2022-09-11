@@ -1,5 +1,4 @@
 window.addEventListener('load', function () {
-  const query = document.querySelector('.query');
   const input = document.querySelector('.query__input');
   const button = document.querySelector('.query__button');
   const h3 = document.querySelector('h3');
@@ -14,8 +13,10 @@ window.addEventListener('load', function () {
     if (!input.value) return;
 
     if (input.value >= 1 && input.value <= 10) {
-      let num = Number(input.value);
-      result = xhr.open('GET', `https://picsum.photos/v2/list?limit=${input.value}`);
+      result = xhr.open(
+        'GET',
+        `https://picsum.photos/v2/list?limit=${input.value}`
+      );
 
       xhr.onload = () => {
         if (xhr.status != 200) {
@@ -38,8 +39,8 @@ window.addEventListener('load', function () {
 
       xhr.send();
     } else {
-        err = `Число вне диапазона от 1 до 10`;
-        h3.innerHTML = err;
+      err = `Число вне диапазона от 1 до 10`;
+      h3.innerHTML = err;
     }
   });
 });
