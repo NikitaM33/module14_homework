@@ -1,71 +1,85 @@
-// XHR запрос =======================
-// window.addEventListener('load', function () {
-//     const inputs = document.querySelectorAll('.query__input');
-//     const btn = document.querySelector('.query__button');
-//     const photos = document.querySelector('.photos');
-//     let h3 = document.querySelector('h3');
-//     const xhr = new XMLHttpRequest();
-//     let err = '';
-        
-//     btn.addEventListener('click', (e) => {
-//         e.preventDefault();
-
-//         inputs.forEach(input => {
-//             if (!input.value) return;
-
-//             if (input.value >= 100 && input.value <= 500) {
-//                 xhr.open(
-//                     'GET',
-//                     `https://loremflickr.com/json/g/${inputs[0].value}/${inputs[1].value}/all`
-//                 );
-
-//                 xhr.onload = () => {
-//                     if (xhr.status !== 200) {
-//                         console.log('Статус ответа: ', xhr.status);
-//                     } else {
-//                         JSON.parse(xhr.result).map((photo) => {
-//                             const img = document.createElement('img');
-
-//                             img.setAttribute('src', photo.download_url);
-//                             photos.appendChild(img);
-//                         });
-//                     }
-//                 };
-
-//                 xhr.onerror = () => {
-//                     console.log('Ошибка! Статус ответа: ', xhr.status);
-//                 };
-
-//                 xhr.send();
-//             } else {
-//                 err = 'Число вне диапазона от 100 до 500';
-//                 h3.innerHTML = err;
-//             }
-//         });
-//     });
-// });
-
-// Fetch запрос =======================
 window.addEventListener('load', function () {
-    const inputs = document.querySelectorAll('.query__input');
-    const btn = document.querySelector('.query__button');
-    let h3 = document.querySelector('h3');
-    let err = '';
-        
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
+  const form = document.querySelector('.form');
+  const field1 = document.querySelector('.field1');
+  const field2 = document.querySelector('.field2');
+  const error1 = document.querySelector('.error1');
+  const error2 = document.querySelector('.error2');
+  const photos = document.querySelector('.photos');
+  const errorElement = document.querySelector('.errorElement');
+  let lastRequest = localStorage.getItem('lastRequest');
 
-        inputs.forEach(input => {
-            if (!input.value) return;
-
-            if (input.value >= 100 && input.value <= 500) {
-                fetch(`https://loremflickr.com/json/g/${inputs[0].value}/${inputs[1].value}/all`)
-                    .then((response) => response.json())
-                    .then(json => console.log(json))
-            } else {
-                err = 'Число вне диапазона от 100 до 500';
-                h3.innerHTML = err;
-            }
+  function doRequest (request) {
+    return fetch(lastRequest)
+      .then((response) => response.json())
+      .then((data) => {
+        data.map((image) => {
+          const img = document.createElement('img');
+          img.setAttribute('src', image.download_url);
+          img.setAttribute('alt', image.download_url);
+          photos.appendChild(img);
         });
-    });
+      });
+  };
+
+  if (lastRequest) {
+    doRequest(lastRequest);
+  }
+
+  form.addEventListener('submit', (e) => {
+    let errors = [];
+    let fld1 = '';
+    let fld2 = '';
+
+    if (!field1.value || !field2.value) {
+      errors.push('Номер страницы и лимит вне диапазона от 1 до 10');
+    }
+
+    if (
+      (field1.value >= 1 && field1.value <= 10) ||
+      typeof field1.value === 'number'
+    ) {
+      e.preventDefault();
+      fld1 = field1.value;
+    } else {
+      e.preventDefault();
+      error1.innerHTML = 'Номер страницы вне диапазона от 1 до 10';
+    }
+
+    if (
+      (field2.value >= 1 && field2.value <= 10) ||
+      typeof field2.value === 'number'
+    ) {
+      e.preventDefault();
+      fld2 = field2.value;
+    } else {
+      e.preventDefault();
+      error2.innerHTML = 'Лимит вне диапазона от 1 до 10';
+    }
+
+    if (errors.length > 0) {
+      e.preventDefault();
+
+      errorElement.innerHTML = errors.join(', ');
+    }
+
+    fetch(`https://picsum.photos/v2/list?page=${fld1}&limit=${fld2}`)
+      .then((response) => response.json())
+      .then((data) => {
+        while(photos.firstChild) {
+          photos.removeChild(photos.firstChild)
+        }
+
+        data.map((image) => {
+          const img = document.createElement('img');
+          img.setAttribute('src', image.download_url);
+          img.setAttribute('alt', image.download_url);
+          photos.appendChild(img);
+        });
+        localStorage.setItem(
+          'lastRequest',
+          `https://picsum.photos/v2/list?page=${fld1}&limit=${fld2}`
+        );
+      })
+      .catch(() => console.error('An error'));
+  });
 });
